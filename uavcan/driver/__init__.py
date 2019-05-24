@@ -17,6 +17,11 @@ if sys.platform.startswith('linux'):
 else:
     SocketCAN = None
 
+if 'win' in sys.platform.lower():
+    from .candle import CandleCAN
+else:
+    CandleCAN = None
+
 __all__ = ['make_driver', 'DriverError', 'CANFrame']
 
 
@@ -28,9 +33,12 @@ def make_driver(device_name, **kwargs):
     """
     windows_com_port = device_name.replace('\\', '').replace('.', '').lower().startswith('com')
     unix_tty = device_name.startswith('/dev/')
+    windows_candle = device_name.startswith('candle')
 
     if windows_com_port or unix_tty:
         return SLCAN(device_name, **kwargs)
+    elif CandleCAN is not None and windows_candle:
+        return CandleCAN(device_name, **kwargs)
     elif SocketCAN is not None:
         return SocketCAN(device_name, **kwargs)
     else:
